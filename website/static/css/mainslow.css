@@ -1,0 +1,33 @@
+body {
+    background-color: #000000;
+    color: #ffffff;
+}
+.navbar {
+    background-color: #c8102e;
+    padding: 0.5rem 1rem;
+}
+.navbar-nav .nav-link {
+    color: #ffffff;
+}
+.navbar-nav .nav-link:hover {
+    color: #ffcccc;
+}
+.form-inline {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+.form-inline input {
+    width: 200px;
+    margin-right: 0.5rem;
+}
+@media (max-width: 576px) {
+    .form-inline {
+        justify-content: center;
+        width: auto;
+        }
+    .form-inline input {
+        width: auto;
+        margin-right: 0.5rem;
+        }
+}
