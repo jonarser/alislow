@@ -31,3 +31,18 @@ body {
         margin-right: 0.5rem;
         }
 }
+
+.btn-outline-tertiary {
+    border-color: #ccc; 
+}
+
+.btn-outline-tertiary:hover {
+    background-color: #ccc; 
+    color: white; 
+}
+
+
+.custom-card {
+    width: 200px;
+    max-width: 100%;
+}

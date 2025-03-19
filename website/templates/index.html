@@ -49,15 +49,34 @@
           </div>
             <form class="d-flex" role="search">
               <input class="form-control me-2" type="search" placeholder="Поискать..." aria-label="Search">
-              <button class="btn btn-outline-tertiary" type="submit">🔎</button>
+              <button class="btn btn-outline-tertiary" type="submit">🔎 </button>
             </form>
         </div>
       </nav>
-
-<div class="container mt-5">
-    <!-- Здесь можно добавить контент страницы -->
-</div>
-
-
+      <div class="container">
+        <h1 class="mt-5 text-center">Популярные товары</h1>
+        <div id="products" class="row mt-4 justify-content-center"></div>
+    </div>
+    
+    <script>
+        fetch('/api/popular-products')
+            .then(response => response.json())
+            .then(data => {
+                const productsDiv = document.getElementById('products');
+                data.forEach(product => {
+                    const card = `
+                        <div class="col-md-3"> <!-- Измените на col-md-3 для уменьшения размера карточек -->
+                            <div class="card mb-4 custom-card"> <!-- Добавьте класс custom-card -->
+                                <img src="/static/goods_images/${product.image_name}" class="card-img-top" alt="${product.name}">
+                                <div class="card-body">
+                                    <h5 class="card-title">${product.name}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    productsDiv.innerHTML += card;
+                });
+            });
+    </script>
 </body>
 </html>
