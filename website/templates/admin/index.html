@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Когда-нибудь заказ приедет</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mainslow.css') }}">
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg bg-danger">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" style="color:#000000" href="#">АдминАли</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="nav-link" style="color:#000000" href="/">Вернуться в МедленныйАли</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Категории
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Компьютеры</a></li>
+                            <li><a class="dropdown-item" href="#">Садовая техника</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Избранное</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Корзина</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Заказы</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Вход/Регистрация</a>
+                    </li>
+                </ul>
+            </div>
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Поискать..." aria-label="Search">
+                <button class="btn btn-outline-tertiary" type="submit">🔎 </button>
+            </form>
+            <button class="btn btn-outline-light ms-2" id="addProductButton" data-bs-toggle="modal" data-bs-target="#addProductModal">➕</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1 class="mt-5 text-center">Редактировать товары</h1>
+        <table class="table mt-4">
+            <thead>
+                <tr>
+                    <th>Изображение</th>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Цена</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="products"></tbody>
+        </table>
+    </div>
+
+    <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addProductModalLabel">Добавить новый товар</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm">
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Название</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productdescription" class="form-label">Описание</label>
+                            <textarea class="form-control" id="productdescription" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productPrice" class="form-label">Цена</label>
+                            <input type="number" class="form-control" id="productPrice" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productImg" class="form-label">Изображение</label>
+                            <input type="file" class="form-control" id="productImg" accept="image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Добавить товар</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        fetch('/api/products')
+            .then(response => response.json())
+            .then(data => {
+                const productsDiv = document.getElementById('products');
+                data.forEach(product => {
+                    const row = `
+                        <tr>
+                            <td><img src="/static/goods_images/${product.img}" alt="${product.name}" style="width: 50px; height: auto;"></td>
+                            <td>${product.name}</td>
+                            <td>${product.description}</td>
+                            <td>${product.price} ₽</td>
+                            <td><button class="btn btn-danger delete-product" data-id="${product.id}">❌</button></td>
+                        </tr>
+                    `;
+                    productsDiv.innerHTML += row;
+                });
+            });
+
+        document.getElementById('products').addEventListener('click', function(event) {
+            if (event.target.classList.contains('delete-product')) {
+                const productId = event.target.getAttribute('data-id');
+                fetch(`/api/product/${productId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data.message); 
+                    event.target.closest('tr').remove();
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+            }
+        });
+
+
+        document.getElementById('addProductForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+            const formData = new FormData();
+            formData.append('name', document.getElementById('productName').value);
+            formData.append('description', document.getElementById('productdescription').value);
+            formData.append('price', document.getElementById('productPrice').value);
+            formData.append('img', document.getElementById('productImg').files[0]);
+
+            fetch('/api/product', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+
+                const productsDiv = document.getElementById('products');
+                const row = `
+                    <tr>
+                        <td><img src="/static/goods_images/${data.img}" alt="${data.name}" style="width: 50px; height: auto;"></td>
+                        <td>${data.name}</td>
+                        <td>${data.description}</td>
+                        <td>${data.price} ₽</td>
+                        <td><button class="btn btn-danger delete-product" data-id="${data.id}">❌</button></td>
+                    </tr>
+                `;
+                productsDiv.innerHTML += row;
+
+                var modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+                modal.hide();
+
+                document.getElementById('addProductForm').reset();
+            })
+            .catch(error => console.error('Ошибка:', error));
+        });
+    </script>
+</body>
+</html>
