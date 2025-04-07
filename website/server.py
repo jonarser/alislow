@@ -23,7 +23,6 @@ class Product(db.Model):
 def index():
     return render_template('index.html')
 
-# отдельная функция для админа без лимита
 @app.route('/api/popular-products', methods=['GET'])
 def get_popular_products():
     products = Product.query.order_by(Product.popularity.desc()).limit(10).all()

@@ -160,12 +160,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                // После успешного добавления товара, обновите список товаров
                 fetch('/api/products')
                     .then(response => response.json())
                     .then(products => {
                         const productsDiv = document.getElementById('products');
-                        productsDiv.innerHTML = ''; // Очистите текущий список
+                        productsDiv.innerHTML = '';
                         products.forEach(product => {
                             const row = `
                                 <tr>
