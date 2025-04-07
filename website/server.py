@@ -4,6 +4,7 @@ from sqlalchemy import text, bindparam
 from werkzeug.utils import secure_filename
 import os
 from pathlib import Path
+import uuid
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://mainuser:1234@192.168.50.117:3306/test?charset=utf8mb4'
@@ -55,21 +56,32 @@ def add_product():
         form = request.form
         file = request.files['img']
         image_dir = Path(__file__).resolve().parent / 'static/goods_images'
-        if not os.path.exists(image_dir): os.makedirs(image_dir)
+
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
+        
         if file:
-            filename = secure_filename(file.filename)
-            file_path = image_dir / filename
+            unique_filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+            file_path = image_dir / unique_filename
+
+            while os.path.exists(file_path):
+                unique_filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+                file_path = image_dir / unique_filename
+
             file.save(file_path)
+
         query = text("INSERT INTO goods (name, description, img, price) VALUES (:name, :description, :img, :price)")
         query = query.bindparams(
             name=form.get('name'),
             description=form.get('description'),
-            img=filename,
+            img=unique_filename,
             price=form.get('price')
         )
+        
         with db.engine.connect() as connection:
             result = connection.execute(query)
             connection.commit()
+        
         return jsonify(form)
 
 @app.route('/api/product/<int:good_id>', methods=['DELETE'])
@@ -77,18 +89,21 @@ def delete_product(good_id):
     product = Product.query.get(good_id)
     if product is None:
         return jsonify({'error': 'Product not found'}), 404
+
+    image_dir = Path(__file__).resolve().parent / 'static/goods_images'
+    image_path = image_dir / product.img
+
+    if os.path.exists(image_path):
+        os.remove(image_path)
+
     db.session.delete(product)
     db.session.commit()
+    
     return jsonify({'message': 'Product deleted successfully'}), 200
 
 def main():
     with app.app_context():
         db.create_all()
-        if Product.query.count() == 0:
-            db.session.add(Product(name='Лопата', description='ей копать', popularity=10, img='shawel.jpg', price=12.3))
-            db.session.add(Product(name='Компьютер', description='купите ему компьютер, хуле он как дурак', popularity=5, img='pc.jpg', price=43.1))
-            db.session.add(Product(name='Телефон', description='ты куда звОнишь', popularity=20, img='phone.jpg', price=14.4))
-            db.session.commit()
     app.run("localhost", 8000, debug=True)
 
 if __name__ == '__main__':

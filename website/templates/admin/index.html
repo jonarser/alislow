@@ -160,22 +160,28 @@
             })
             .then(response => response.json())
             .then(data => {
-
-                const productsDiv = document.getElementById('products');
-                const row = `
-                    <tr>
-                        <td><img src="/static/goods_images/${data.img}" alt="${data.name}" style="width: 50px; height: auto;"></td>
-                        <td>${data.name}</td>
-                        <td>${data.description}</td>
-                        <td>${data.price} ₽</td>
-                        <td><button class="btn btn-danger delete-product" data-id="${data.id}">❌</button></td>
-                    </tr>
-                `;
-                productsDiv.innerHTML += row;
+                // После успешного добавления товара, обновите список товаров
+                fetch('/api/products')
+                    .then(response => response.json())
+                    .then(products => {
+                        const productsDiv = document.getElementById('products');
+                        productsDiv.innerHTML = ''; // Очистите текущий список
+                        products.forEach(product => {
+                            const row = `
+                                <tr>
+                                    <td><img src="/static/goods_images/${product.img}" alt="${product.name}" style="width: 50px; height: auto;"></td>
+                                    <td>${product.name}</td>
+                                    <td>${product.description}</td>
+                                    <td>${product.price} ₽</td>
+                                    <td><button class="btn btn-danger delete-product" data-id="${product.id}">❌</button></td>
+                                </tr>
+                            `;
+                            productsDiv.innerHTML += row;
+                        });
+                    });
 
                 var modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
                 modal.hide();
-
                 document.getElementById('addProductForm').reset();
             })
             .catch(error => console.error('Ошибка:', error));
