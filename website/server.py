@@ -100,6 +100,41 @@ def delete_product(good_id):
     
     return jsonify({'message': 'Product deleted successfully'}), 200
 
+@app.route('/api/product/<int:good_id>', methods=['PUT'])
+def update_product(good_id):
+    product = Product.query.get(good_id)
+    if product is None:
+        return jsonify({'error': 'Product not found'}), 404
+
+    data = request.json
+    product.name = data.get('name', product.name)
+    product.description = data.get('description', product.description)
+    product.price = data.get('price', product.price)
+
+    if 'img' in request.files:
+        file = request.files['img']
+        image_dir = Path(__file__).resolve().parent / 'static/goods_images'
+
+        if file:
+            unique_filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+            file_path = image_dir / unique_filename
+
+            while os.path.exists(file_path):
+                unique_filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+                file_path = image_dir / unique_filename
+
+            file.save(file_path)
+            product.img = unique_filename  
+
+    db.session.commit()
+    return jsonify({
+        'id': product.good_id,
+        'name': product.name,
+        'description': product.description,
+        'img': product.img,
+        'price': product.price
+    })
+
 def main():
     with app.app_context():
         db.create_all()

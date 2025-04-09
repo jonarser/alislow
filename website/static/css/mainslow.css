@@ -49,3 +49,17 @@ body {
 .modal-content {
     color: black;
 }
+
+.delete-product {
+ background-color: #ac1c1c;
+ border: none;
+    }
+
+.edit-product {
+    border: none;
+}
+
+.btn-custom {
+    padding: 10px 13px;
+    font-size: 1.0em; 
+}

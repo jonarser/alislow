@@ -50,7 +50,7 @@
             </div>
             <form class="d-flex" role="search">
                 <input class="form-control me-2" type="search" placeholder="Поискать..." aria-label="Search">
-                <button class="btn btn-outline-tertiary" type="submit">🔎 </button>
+                <button class="btn btn-outline-light" type="submit">🔎 </button>
             </form>
             <button class="btn btn-outline-light ms-2" id="addProductButton" data-bs-toggle="modal" data-bs-target="#addProductModal">➕</button>
         </div>
@@ -104,6 +104,35 @@
         </div>
     </div>
 
+    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProductModalLabel">Редактировать товар</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProductForm">
+                        <input type="hidden" id="editProductId">
+                        <div class="mb-3">
+                            <label for="editProductName" class="form-label">Название</label>
+                            <input type="text" class="form-control" id="editProductName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductDescription" class="form-label">Описание</label>
+                            <textarea class="form-control" id="editProductDescription" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductPrice" class="form-label">Цена</label>
+                            <input type="number" class="form-control" id="editProductPrice" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         fetch('/api/products')
             .then(response => response.json())
@@ -116,7 +145,10 @@
                             <td>${product.name}</td>
                             <td>${product.description}</td>
                             <td>${product.price} ₽</td>
-                            <td><button class="btn btn-danger delete-product" data-id="${product.id}">❌</button></td>
+                            <td>
+                                <button class="btn btn-warning btn-custom edit-product" data-id="${product.id}" data-name="${product.name}" data-description="${product.description}" data-price="${product.price}">✏️</button>
+                                <button class="btn btn-danger btn-custom delete-product" data-id="${product.id}">❌</button>
+                            </td>
                         </tr>
                     `;
                     productsDiv.innerHTML += row;
@@ -143,8 +175,72 @@
                     console.error('There was a problem with the fetch operation:', error);
                 });
             }
+
+            if (event.target.classList.contains('edit-product')) {
+                const productId = event.target.getAttribute('data-id');
+                const productName = event.target.getAttribute('data-name');
+                const productDescription = event.target.getAttribute('data-description');
+                const productPrice = event.target.getAttribute('data-price');
+
+             
+                document.getElementById('editProductId').value = productId;
+                document.getElementById('editProductName').value = productName;
+                document.getElementById('editProductDescription').value = productDescription;
+                document.getElementById('editProductPrice').value = productPrice;
+
+            
+                var editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+                editModal.show();
+            }
         });
 
+        document.getElementById('editProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const productId = document.getElementById('editProductId').value;
+            const updatedProduct = {
+                name: document.getElementById('editProductName').value,
+                description: document.getElementById('editProductDescription').value,
+                price: document.getElementById('editProductPrice').value
+            };
+
+            fetch(`/api/product/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedProduct)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+             
+                fetch('/api/products')
+                    .then(response => response.json())
+                    .then(products => {
+                        const productsDiv = document.getElementById('products');
+                        productsDiv.innerHTML = '';
+                        products.forEach(product => {
+                            const row = `
+                                <tr>
+                                    <td><img src="/static/goods_images/${product.img}" alt="${product.name}" style="width: 50px; height: auto;"></td>
+                                    <td>${product.name}</td>
+                                    <td>${product.description}</td>
+                                    <td>${product.price} ₽</td>
+                                    <td>
+                                        <button class="btn btn-warning btn-custom edit-product" data-id="${product.id}" data-name="${product.name}" data-description="${product.description}" data-price="${product.price}">✏️</button>
+                                        <button class="btn btn-danger btn-custom delete-product" data-id="${product.id}">❌</button>
+                                    </td>
+                                </tr>
+                            `;
+                            productsDiv.innerHTML += row;
+                        });
+                    });
+
+                var editModal = bootstrap.Modal.getInstance(document.getElementById('editProductModal'));
+                editModal.hide();
+            })
+            .catch(error => console.error('Ошибка:', error));
+        });
 
         document.getElementById('addProductForm').addEventListener('submit', function(event) {
             event.preventDefault(); 
@@ -172,7 +268,10 @@
                                     <td>${product.name}</td>
                                     <td>${product.description}</td>
                                     <td>${product.price} ₽</td>
-                                    <td><button class="btn btn-danger delete-product" data-id="${product.id}">❌</button></td>
+                                    <td>
+                                        <button class="btn btn-warning btn-custom edit-product" data-id="${product.id}" data-name="${product.name}" data-description="${product.description}" data-price="${product.price}">✏️</button>
+                                        <button class="btn btn-danger btn-custom delete-product" data-id="${product.id}">❌</button>
+                                    </td>
                                 </tr>
                             `;
                             productsDiv.innerHTML += row;
